@@ -1,0 +1,21 @@
+{
+  "name": "ironhacks-mspe",
+  "version": "1.0.0",
+  "description": "IronHacks solutions scorer for MSPE ",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+    "test": "standard"
+  },
+  "keywords": [
+    "statistics",
+    "csv",
+    "data-science"
+  ],
+  "author": "Matt Harris <charrismatic@protonmail.com> (https://charrismatic.github.io/)",
+  "license": "ISC",
+  "dependencies": {
+    "csv-reader": "^1.0.6",
+    "minimist": "^1.2.5"
+  }
+}
