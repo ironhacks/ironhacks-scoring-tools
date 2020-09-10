@@ -1,0 +1,6 @@
+./data/
+data
+results
+.ipynb-checkpoints
+.ipynb_checkpoints
+node_modules

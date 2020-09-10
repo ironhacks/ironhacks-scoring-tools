@@ -1,0 +1,22 @@
+{
+  "name": "ironhacks-scoring-tools",
+  "version": "1.0.0",
+  "description": "IronHacks user submission scoring tools",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ironhacks/ironhacks-scoring-tools.git"
+  },
+  "keywords": [
+    "utilities"
+  ],
+  "author": "Matt Harris <charrismatic@protonmail.com> (https://charrismatic.github.io/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ironhacks/ironhacks-scoring-tools/issues"
+  },
+  "homepage": "https://github.com/ironhacks/ironhacks-scoring-tools#readme"
+}

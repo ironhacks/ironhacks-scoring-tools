@@ -1,0 +1,16 @@
+{
+  "name": "notebook-score",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "minimist": "^1.2.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node .",
+    "test": "standard"
+  },
+  "author": "Matt Harris <charrismatic@protonmail.com> (https://charrismatic.github.io/)",
+  "license": "ISC"
+}
