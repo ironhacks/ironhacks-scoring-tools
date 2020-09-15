@@ -15,7 +15,14 @@ let rows_delta = [];
 let rows_delta_squared = [];
 let result_rows = [];
 
-result_rows.push(`uuid,count_prediction,count_actual,delta,delta_squared`);
+result_rows.push([
+  'uuid',
+  'prediction',
+  'actual',
+  'delta',
+  'percent_error',
+  'delta_squared',
+].join(','));
 
 const readSolution = async () => {
   const csv_config = {
@@ -85,6 +92,7 @@ const readPrediction = async () => {
       writeScoreFile({
         userId: userId,
         mape: 'read_error',
+        mappe: 'read_error',
         mspe: 'read_error',
       })
     })
@@ -93,6 +101,7 @@ const readPrediction = async () => {
 const compareData = () => {
   let solution_sum = 0;
   let prediction_sum = 0;
+  let percent_error_sum = 0;
   let error_sum = 0;
   let error_sq_sum = 0
 
@@ -106,10 +115,12 @@ const compareData = () => {
 
     let delta = Math.abs(predict - actual);
     let delta_squared = delta * delta;
+    let percent_error = (delta / actual);
 
     solution_sum += actual
     prediction_sum += predict
     error_sum += delta
+    percent_error_sum += percent_error
     error_sq_sum += delta_squared
 
     result_rows.push([
@@ -117,6 +128,7 @@ const compareData = () => {
       parseFloat(predict).toFixed(2),
       parseFloat(actual).toFixed(2),
       parseFloat(delta).toFixed(2),
+      parseFloat(percent_error,).toFixed(2),
       parseFloat(delta_squared).toFixed(2),
     ].join(','))
   }
@@ -129,6 +141,7 @@ const compareData = () => {
     solution_count_sum: solution_sum.toLocaleString('en-us'),
     prediction_count_sum: prediction_sum.toLocaleString('en-us'),
     prediction_error: error_sum.toLocaleString('en-us'),
+    prediction_percent_error: (percent_error_sum / solution_count).toFixed(2).toLocaleString('en-us'),
     prediction_mean_error: (error_sum / solution_count).toFixed(2).toLocaleString('en-us'),
     prediction_square_error: error_sq_sum.toLocaleString('en-us'),
     prediction_mean_square_error: (error_sq_sum / solution_count).toFixed(2).toLocaleString('en-us'),
@@ -139,6 +152,7 @@ const compareData = () => {
   writeScoreFile({
     userId: userId,
     mape: (error_sum / solution_count).toFixed(2).toLocaleString('en-us'),
+    mappe: (percent_error_sum / solution_count).toFixed(2).toLocaleString('en-us'),
     mspe: (error_sq_sum / solution_count).toFixed(2).toLocaleString('en-us'),
   })
 }
@@ -163,6 +177,7 @@ const printReport = (data) => {
   console.log('----------------');
   console.log('Sum Err:        ', COLOR_GREEN, data.prediction_error, COLOR_RESET)
   console.log('Avg Err:        ', COLOR_GREEN, data.prediction_mean_error, COLOR_RESET)
+  console.log('Avg Percent Err:', COLOR_GREEN, data.prediction_percent_error, COLOR_RESET)
   console.log('----------------');
   console.log('Sum Squared Err:', COLOR_GREEN, data.prediction_square_error, COLOR_RESET)
   console.log('Avg Squared Err:', COLOR_GREEN, data.prediction_mean_square_error, COLOR_RESET)
@@ -176,17 +191,19 @@ const writeResultFile = (result_rows) => {
   )
 }
 
-const writeScoreFile = ({userId, mape, mspe}) => {
+const writeScoreFile = ({userId, mape, mappe, mspe}) => {
   const header_row = [
     'userId',
-    'mape',
     'mspe',
+    'mape',
+    'mappe',
   ].join(',')
 
   const data_row = [
     userId,
-    mape,
     mspe,
+    mape,
+    mappe,
   ].join(',');
 
   const output = [header_row, data_row, ''].join('\n')
@@ -202,6 +219,7 @@ const parse_options = () => {
     output: 'results.csv',
     verbose: false,
     userId: null,
+    submissionId: null,
   };
 
   var options = Object.assign({}, defaults, argv);
@@ -215,6 +233,10 @@ const parse_options = () => {
     userId = options.user
   }
 
+  if (options.submission) {
+    submissionId = options.submission
+  }
+
   return options;
 }
 
@@ -224,9 +246,10 @@ const main = () => {
 }
 
 let userId;
+let submissionId;
+
 parse_options();
 
-let submissionId = 'submission-4';
 let submission_filename = `../data/${submissionId}/${userId}/submission_prediction_output.csv`;
 let submission_graded_filename = `../data/${submissionId}/${userId}/result.csv`;
 let result_filename = `../results/${submissionId}/mspe/${userId}.csv`;
@@ -234,8 +257,12 @@ let solution_filename = `./solutions/${submissionId}.csv`;
 
 
 if (!userId) {
-  console.log(userId);
   console.log('Please set the userId --user <USER_ID>');
+  return false;
+}
+
+if (!submissionId) {
+  console.log('Please set the submissionId --submission <SUBMISSION_ID>');
   return false;
 }
 
