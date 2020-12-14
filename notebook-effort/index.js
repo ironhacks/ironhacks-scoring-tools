@@ -67,7 +67,7 @@ const printNbScore = ({
 }
 
 
-const writeNbScoreFile = ({outputFile, userId, score}) => {
+const writeNbScoreFile = ({outputFile, outputPath, userId, score}) => {
   const header_row = [
     'userId',
     'nb_effort',
@@ -78,8 +78,12 @@ const writeNbScoreFile = ({outputFile, userId, score}) => {
     score,
   ].join(',');
 
+
+  !fs.existsSync(outputPath) && fs.mkdirSync(outputPath, { recursive: true })
+
   const output = [header_row, data_row, ''].join('\n')
-  fs.writeFileSync(outputFile, output)
+
+  fs.writeFileSync([outputPath, outputFile].join('/'), output)
 }
 
 
@@ -104,33 +108,54 @@ const parse_options = () => {
     userId = options.user
   }
 
-  return options;
+  if (options.hack) {
+    hackId = options.hack
+  }
+
+  if (options.submission) {
+    submissionId = options.submission
+  }
+
+  return options
 }
 
 const main = () => {
-  let submissionId = 'submission-4';
-  let notebook_file = `../data/${submissionId}/${userId}/submission_prediction_output.ipynb`;
-  let result_filename = `../results/${submissionId}/notebook-effort/${userId}.csv`;
+  let notebook_file    = `./data/${hackId}/submissions/${submissionId}/${userId}/submission_prediction_output.ipynb`
+  let result_path      = `./data/${hackId}/results/${submissionId}/notebook-effort`
+  let result_filename  = `${userId}.csv`
 
   let nb = getNotebook(notebook_file)
   let result = getNotebookScore(nb)
 
   printNbScore(result)
+
   writeNbScoreFile({
     userId: userId,
     outputFile: result_filename,
+    outputPath: result_path,
     score: result.exec_avg,
   })
 }
 
+let hackId
+let submissionId
+let userId
 
-let userId;
-parse_options();
+let options = parse_options()
 
 if (!userId) {
-  console.log(userId);
-  console.log('Please set the userId --user <USER_ID>');
-  return false;
+  console.log('Please set the userId --user <USER_ID>')
+  return false
+}
+
+if (!hackId) {
+  console.log('Please set the hackId --hack <HACK_ID>')
+  return false
+}
+
+if (!submissionId) {
+  console.log('Please set the submissionId --submission <SUBMISSION_ID>')
+  return false
 }
 
 main()
