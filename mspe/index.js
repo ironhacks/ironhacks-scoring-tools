@@ -15,8 +15,10 @@ let rows_delta = [];
 let rows_delta_squared = [];
 let result_rows = [];
 
+// SET RESULT FILE HEADERS
+// -----------------------
 result_rows.push([
-  'uuid',
+  'poi_id',
   'prediction',
   'actual',
   'delta',
@@ -33,19 +35,23 @@ const readSolution = async () => {
     trim: true,
   }
 
+  if (options.verbose) {
+    console.log('\nReading Solution:', solution_filename)
+  }
+
   let inputStreamKey = fs.createReadStream(solution_filename, 'utf8');
 
   inputStreamKey
     .pipe(new CsvReadableStream(csv_config))
     .on('data', function (row) {
-      solution[row.uuid] = row.sum_visit_counts
+      solution[row.poi_id] = row.raw_visit_counts
     })
     .on('end', function (data) {
       solutionLoaded = true;
       if (predictionLoaded) {
         compareData()
       }
-    });
+    })
 }
 
 const readPrediction = async () => {
@@ -63,13 +69,18 @@ const readPrediction = async () => {
     trim: true,
   }
 
+  if (options.verbose) {
+    console.log('\nReading Solution:', solution_filename)
+  }
+
   let inputStreamTest = fs.createReadStream(submission_filename, 'utf8');
 
   inputStreamTest
     .pipe(new CsvReadableStream(csv_config))
     .on('data', function (row) {
       let uuid = row[0];
-      let value = row[2];
+      let value = row[1];
+
       // SKIP NULL VALUES WHERE UUID EXISTS
       if (value) {
         if (typeof value === 'string') {
@@ -105,17 +116,25 @@ const compareData = () => {
   let error_sum = 0;
   let error_sq_sum = 0
 
+  if (options.verbose) {
+    console.log('\nSolutions:')
+    console.log(solution)
+
+    console.log('\nSubmission')
+    console.log(prediction)
+  }
+
   for (let uuid of Object.keys(solution)) {
-    let actual = solution[uuid];
-    let predict = prediction[uuid];
+    let actual = solution[uuid]
+    let predict = prediction[uuid]
 
     if (!predict) {
-      predict = 0;
+      predict = 0
     }
 
-    let delta = Math.abs(predict - actual);
-    let delta_squared = delta * delta;
-    let percent_error = (delta / actual);
+    let delta = Math.abs(predict - actual)
+    let delta_squared = delta * delta
+    let percent_error = (delta / actual)
 
     solution_sum += actual
     prediction_sum += predict
@@ -147,6 +166,10 @@ const compareData = () => {
     prediction_mean_square_error: (error_sq_sum / solution_count).toFixed(2).toLocaleString('en-us'),
   })
 
+  if (options['dry-run']) {
+    return false
+  }
+
   writeResultFile(result_rows)
 
   writeScoreFile({
@@ -166,22 +189,24 @@ const printReport = (data) => {
   COLOR_YELOW = '\033[01;33m';
   COLOR_RESET = '\033[0m';
 
-  console.log(`Submission:`, COLOR_WHITE, submissionId, COLOR_RESET);
-  console.log(`User:`, COLOR_WHITE, userId, COLOR_RESET);
-  console.log('==========================================');
+  console.log('')
+  console.log(`HackId:`, COLOR_WHITE, hackId, COLOR_RESET)
+  console.log(`Submission:`, COLOR_WHITE, submissionId, COLOR_RESET)
+  console.log(`User:`, COLOR_WHITE, userId, COLOR_RESET)
+  console.log('==========================================')
   console.log('Predicted Rows: ', COLOR_RED, data.prediction_rows, COLOR_RESET)
   console.log('Solution Rows:  ', COLOR_RED, data.solution_rows,COLOR_RESET)
-  console.log('----------------');
+  console.log('----------------')
   console.log('Predicted Sum:  ', COLOR_BLUE, data.prediction_count_sum, COLOR_RESET)
   console.log('Solution Sum:   ', COLOR_BLUE, data.solution_count_sum, COLOR_RESET)
-  console.log('----------------');
+  console.log('----------------')
   console.log('Sum Err:        ', COLOR_GREEN, data.prediction_error, COLOR_RESET)
   console.log('Avg Err:        ', COLOR_GREEN, data.prediction_mean_error, COLOR_RESET)
   console.log('Avg Percent Err:', COLOR_GREEN, data.prediction_percent_error, COLOR_RESET)
-  console.log('----------------');
+  console.log('----------------')
   console.log('Sum Squared Err:', COLOR_GREEN, data.prediction_square_error, COLOR_RESET)
   console.log('Avg Squared Err:', COLOR_GREEN, data.prediction_mean_square_error, COLOR_RESET)
-  console.log('\n');
+  console.log('\n')
 }
 
 const writeResultFile = (result_rows) => {
@@ -207,7 +232,10 @@ const writeScoreFile = ({userId, mape, mappe, mspe}) => {
   ].join(',');
 
   const output = [header_row, data_row, ''].join('\n')
-  fs.writeFileSync(result_filename, output)
+
+  !fs.existsSync(results_path) && fs.mkdirSync(results_path, { recursive: true })
+
+  fs.writeFileSync([results_path, results_filename].join('/'), output)
 }
 
 
@@ -215,7 +243,6 @@ const writeScoreFile = ({userId, mape, mappe, mspe}) => {
 const parse_options = () => {
   var defaults = {
     input: false,
-    dry_run: false,
     output: 'results.csv',
     verbose: false,
     userId: null,
@@ -233,6 +260,10 @@ const parse_options = () => {
     userId = options.user
   }
 
+  if (options.hack) {
+    hackId = options.hack
+  }
+
   if (options.submission) {
     submissionId = options.submission
   }
@@ -245,16 +276,11 @@ const main = () => {
   readPrediction();
 }
 
-let userId;
-let submissionId;
+let userId
+let submissionId
+let hackId
 
-parse_options();
-
-let submission_filename = `../data/${submissionId}/${userId}/submission_prediction_output.csv`;
-let submission_graded_filename = `../data/${submissionId}/${userId}/result.csv`;
-let result_filename = `../results/${submissionId}/mspe/${userId}.csv`;
-let solution_filename = `./solutions/${submissionId}.csv`;
-
+let options = parse_options()
 
 if (!userId) {
   console.log('Please set the userId --user <USER_ID>');
@@ -265,5 +291,17 @@ if (!submissionId) {
   console.log('Please set the submissionId --submission <SUBMISSION_ID>');
   return false;
 }
+
+if (!hackId) {
+  console.log('Please set the hackId --hack <HACK_ID>');
+  return false;
+}
+
+let solution_filename          = `./data/${hackId}/solutions/${submissionId}.csv`
+let submission_filename        = `./data/${hackId}/submissions/${submissionId}/${userId}/submission_prediction_output.csv`;
+let submission_graded_filename = `./data/${hackId}/submissions/${submissionId}/${userId}/result.csv`
+let results_path               = `./data/${hackId}/results/${submissionId}/mspe`
+let results_filename            = `${userId}.csv`
+
 
 main();
