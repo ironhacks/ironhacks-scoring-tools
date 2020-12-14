@@ -4,5 +4,16 @@ results
 .ipynb-checkpoints
 .ipynb_checkpoints
 node_modules
-
+.env
 mspe/solutions/
+service_account.json
+
+archive/
+
+hub-history/output/
+
+hub-history/__pycache__/
+
+ipython-history/output/
+
+ipython-history/__pycache__/

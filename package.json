@@ -4,7 +4,14 @@
   "description": "IronHacks user submission scoring tools",
   "main": "index.js",
   "scripts": {
-    "start": "node ."
+    "bqjobs": "./bigquery-jobs/bigquery_jobs.py",
+    "csv2json": "./scripts/csv-to-json.sh",
+    "functions": "./extract-functions/batch.sh",
+    "nbeffort": "./notebook-effort/batch.sh",
+    "submissions:list": "./scripts/firebase-storage-list.sh",
+    "submissions:copy": "./scripts/firebase-storage-copy.sh",
+    "mspe": "./mspe/scripts/batch.sh",
+    "notebook:convert": "./scripts/convert-notebooks.sh"
   },
   "repository": {
     "type": "git",
