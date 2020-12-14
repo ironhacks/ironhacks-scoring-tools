@@ -1,7 +1,24 @@
 #!/bin/bash
 
-PROJECT_ID="the-ironhacks-platform-dev"
-HACK_ID="DeKE13nHvqzolDUa0Fg9"
-SUBMISSION_ID="submission-3-covid-19-data-science-challenge-august-2020"
+# gsutil ls -lr gs://<storage_bucket>/<path>
 
-gsutil ls -l gs://${PROJECT_ID}.appspot.com/data/hacks/${HACK_ID}/${SUBMISSION_ID}
+PROJECT_ID="the-ironhacks-platform-dev"
+
+[[ -f ".env" ]] && . "./.env"
+
+HACK_ID=${1?'HACK_ID is required'}
+SUBMISSION_ID="$2"
+
+__list_all_submission_files () {
+  gsutil ls -lr "gs://${PROJECT_ID}.appspot.com/data/hacks/${HACK_ID}"
+}
+
+__list_submission_files () {
+  gsutil ls -lr "gs://${PROJECT_ID}.appspot.com/data/hacks/${HACK_ID}/${SUBMISSION_ID}"
+}
+
+if [ -z "${SUBMISSION_ID}" ]; then
+  __list_all_submission_files
+else
+  __list_submission_files "${SUBMISSION_ID}"
+fi
